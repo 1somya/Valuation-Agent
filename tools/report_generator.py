@@ -49,8 +49,7 @@ def generate_report(report: FinalReport, output_dir: str = "output/reports") -> 
         "",
         f"| Field | Value |",
         f"|-------|-------|",
-        f"| Current Price | ${f.current_price:.2f if f.current_price else 'N/A'} |",
-        f"| Target Price (Base) | **${v.target_price_base:.2f}** |",
+        f"| Current Price | ${f'{f.current_price:.2f}' if f.current_price else 'N/A'} |",        f"| Target Price (Base) | **${v.target_price_base:.2f}** |",
         f"| Target Price Range | ${v.target_price_low:.2f} – ${v.target_price_high:.2f} |",
     ]
 

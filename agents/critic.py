@@ -18,7 +18,7 @@
 #   for revision. We implement one round of critique here.
 # ─────────────────────────────────────────────────────────────────────────────
 
-import anthropic
+from groq import Groq
 import os
 from models.schemas import FinancialData, ValuationResult, CritiqueResult
 
@@ -219,15 +219,13 @@ def _llm_evidence_audit(
     RETURNS: (list of evidence gaps, overall critique summary paragraph)
     """
 
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
     # Build a compact summary of what the analyst produced
     dcf_summary = "Not available"
     if valuation.dcf_result:
         dcf_summary = (
             f"DCF price: ${valuation.dcf_result.dcf_price_per_share:.2f} "
             f"(WACC: {valuation.dcf_result.wacc:.1%}, "
-            f"Growth: unknown, TGR: {valuation.dcf_result.terminal_growth_rate:.1%})"
+            f"TGR: {valuation.dcf_result.terminal_growth_rate:.1%})"
         )
 
     mult_summary = "Not available"
@@ -276,13 +274,12 @@ Return ONLY valid JSON (no markdown):
   "critique_summary": "<2-3 paragraph honest critique of this valuation>"
 }}"""
 
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=700,
-        messages=[{"role": "user", "content": prompt}],
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": prompt}],
     )
-
-    raw = response.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
 
     # Strip markdown if present
     if raw.startswith("```"):

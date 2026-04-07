@@ -136,10 +136,10 @@ def main():
     """
 
     # ── Validate API keys before starting ─────────────────────────────────────
-    anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not anthropic_key or anthropic_key == "your_anthropic_key_here":
-        print("❌ ERROR: ANTHROPIC_API_KEY not set in .env file")
-        print("   Get your key from: https://console.anthropic.com/")
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    if not groq_key or groq_key == "your_groq_key_here":
+        print("❌ ERROR: GROQ_API_KEY not set in .env file")
+        print("   Get your free key from: https://console.groq.com")
         return
 
     tavily_key = os.getenv("TAVILY_API_KEY", "")

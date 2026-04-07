@@ -16,7 +16,7 @@
 #   More complex agents (Analyst, Critic) will use multi-step LLM calls.
 # ─────────────────────────────────────────────────────────────────────────────
 
-import anthropic
+from groq import Groq
 import os
 from models.schemas import FinancialData
 from tools.data_fetcher import fetch_financial_data, fetch_news
@@ -66,8 +66,6 @@ def _enrich_news_with_llm(financial_data: FinancialData) -> FinancialData:
 
     print(f"  [Collector] Using LLM to distill news themes for {financial_data.ticker}...")
 
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-
     # Format the raw news into a readable block for the prompt
     news_block = "\n".join([f"- {item}" for item in financial_data.recent_news[:5]])
 
@@ -82,16 +80,16 @@ Here are recent news snippets:
 Extract the 3 most important themes relevant to valuation (growth drivers, risks, or strategic changes).
 Return ONLY a bullet list of 3 concise themes, each under 30 words. No intro text."""
 
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=300,
-        messages=[{"role": "user", "content": prompt}],
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+    response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": prompt}],
     )
-
-    # Replace raw news with the distilled themes
-    # The original URLs are preserved for citations
-    distilled = response.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
+    distilled = raw
     theme_lines = [line.strip("- ").strip() for line in distilled.split("\n") if line.strip()]
+
+    
 
     # Keep themes as the first entries, then append any leftover raw news
     financial_data.recent_news = theme_lines
