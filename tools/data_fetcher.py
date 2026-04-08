@@ -114,7 +114,7 @@ def fetch_news(ticker: str, company_name: str) -> tuple[list[str], list[str]]:
     try:
         # Search for recent earnings / analyst news
         results = client.search(
-            query=f"{company_name} {ticker} earnings valuation analyst 2024 2025",
+            query=f"{company_name} {ticker} earnings valuation analyst 2025 2026",
             search_depth="basic",   # "advanced" uses more credits
             max_results=5,
         )

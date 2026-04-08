@@ -124,7 +124,7 @@ def run_analyst(financial_data: FinancialData) -> ValuationResult:
 
 def _get_llm_assumptions(financial_data: FinancialData) -> dict:
     """
-    The key LLM reasoning call. Gemini reads all the financial context and
+    The key LLM reasoning call. Groq reads all the financial context and
     decides on appropriate valuation assumptions.
 
     LLM DOES:   Qualitative reasoning about growth, risk, WACC
@@ -133,55 +133,55 @@ def _get_llm_assumptions(financial_data: FinancialData) -> dict:
 
     # Build the financial data block to inject into the prompt
     financials_block = f"""
-Company: {financial_data.company_name} ({financial_data.ticker})
-Sector: {financial_data.sector} | Industry: {financial_data.industry}
+    Company: {financial_data.company_name} ({financial_data.ticker})
+    Sector: {financial_data.sector} | Industry: {financial_data.industry}
 
-MARKET DATA:
-- Current Price: ${financial_data.current_price or 'N/A'}
-- Market Cap: ${f"{financial_data.market_cap:,.0f}" if financial_data.market_cap else 'N/A'}
-- P/E Ratio: {financial_data.pe_ratio or 'N/A'}
-- Forward P/E: {financial_data.forward_pe or 'N/A'}
-- EV/EBITDA: {financial_data.ev_ebitda or 'N/A'}
-- Beta: {financial_data.beta or 'N/A'}
+    MARKET DATA:
+    - Current Price: ${financial_data.current_price or 'N/A'}
+    - Market Cap: ${f"{financial_data.market_cap:,.0f}" if financial_data.market_cap else 'N/A'}
+    - P/E Ratio: {financial_data.pe_ratio or 'N/A'}
+    - Forward P/E: {financial_data.forward_pe or 'N/A'}
+    - EV/EBITDA: {financial_data.ev_ebitda or 'N/A'}
+    - Beta: {financial_data.beta or 'N/A'}
 
-INCOME STATEMENT (TTM):
-- Revenue: ${f"{financial_data.revenue_ttm:,.0f}" if financial_data.revenue_ttm else 'N/A'}
-- Net Income: ${f"{financial_data.net_income_ttm:,.0f}" if financial_data.net_income_ttm else 'N/A'}
-- EBITDA: ${f"{financial_data.ebitda_ttm:,.0f}" if financial_data.ebitda_ttm else 'N/A'}
-- Gross Margin: {f"{financial_data.gross_margin:.1%}" if financial_data.gross_margin else 'N/A'}
-- Net Margin: {f"{financial_data.net_margin:.1%}" if financial_data.net_margin else 'N/A'}
-- Revenue Growth YoY: {f"{financial_data.revenue_growth_yoy:.1%}" if financial_data.revenue_growth_yoy else 'N/A'}
+    INCOME STATEMENT (TTM):
+    - Revenue: ${f"{financial_data.revenue_ttm:,.0f}" if financial_data.revenue_ttm else 'N/A'}
+    - Net Income: ${f"{financial_data.net_income_ttm:,.0f}" if financial_data.net_income_ttm else 'N/A'}
+    - EBITDA: ${f"{financial_data.ebitda_ttm:,.0f}" if financial_data.ebitda_ttm else 'N/A'}
+    - Gross Margin: {f"{financial_data.gross_margin:.1%}" if financial_data.gross_margin else 'N/A'}
+    - Net Margin: {f"{financial_data.net_margin:.1%}" if financial_data.net_margin else 'N/A'}
+    - Revenue Growth YoY: {f"{financial_data.revenue_growth_yoy:.1%}" if financial_data.revenue_growth_yoy else 'N/A'}
 
-CASH FLOW & BALANCE SHEET:
-- Free Cash Flow: ${f"{financial_data.free_cash_flow:,.0f}" if financial_data.free_cash_flow else 'N/A'}
-- Total Debt: ${f"{financial_data.total_debt:,.0f}" if financial_data.total_debt else 'N/A'}
-- Cash: ${f"{financial_data.cash_and_equivalents:,.0f}" if financial_data.cash_and_equivalents else 'N/A'}
+    CASH FLOW & BALANCE SHEET:
+    - Free Cash Flow: ${f"{financial_data.free_cash_flow:,.0f}" if financial_data.free_cash_flow else 'N/A'}
+    - Total Debt: ${f"{financial_data.total_debt:,.0f}" if financial_data.total_debt else 'N/A'}
+    - Cash: ${f"{financial_data.cash_and_equivalents:,.0f}" if financial_data.cash_and_equivalents else 'N/A'}
 
-RECENT NEWS THEMES:
-{chr(10).join(f"- {n}" for n in financial_data.recent_news[:3]) or "No news available"}
-"""
+    RECENT NEWS THEMES:
+    {chr(10).join(f"- {n}" for n in financial_data.recent_news[:3]) or "No news available"}
+    """
 
     prompt = f"""You are a senior equity research analyst at a top-tier investment bank.
-Analyze the following company data and determine appropriate valuation assumptions.
+    Analyze the following company data and determine appropriate valuation assumptions.
 
-{financials_block}
+    {financials_block}
 
-Based on this data, provide your valuation assumptions. Consider:
-1. Revenue growth rate vs peers and historical trend
-2. WACC: use the CAPM approach — risk-free rate (~4.5% US 10Y) + equity risk premium (~5.5%) x beta
-   Then adjust for company-specific risk (leverage, size, sector)
-3. Terminal growth rate: typically 2-3% for mature companies, slightly higher for high-growth
-4. Key risks from the news and financial profile
+    Based on this data, provide your valuation assumptions. Consider:
+    1. Revenue growth rate vs peers and historical trend
+    2. WACC: use the CAPM approach — risk-free rate (~4.5% US 10Y) + equity risk premium (~5.5%) x beta
+    Then adjust for company-specific risk (leverage, size, sector)
+    3. Terminal growth rate: typically 2-3% for mature companies, slightly higher for high-growth
+    4. Key risks from the news and financial profile
 
-Return ONLY a valid JSON object with exactly these fields (no markdown, no explanation):
-{{
-  "growth_rate": <float, e.g. 0.10 for 10%>,
-  "wacc": <float, e.g. 0.09 for 9%>,
-  "terminal_growth_rate": <float, e.g. 0.025 for 2.5%>,
-  "narrative": "<2-3 sentence summary of the investment case>",
-  "growth_rationale": "<1-2 sentences explaining why you chose this growth rate>",
-  "risk_factors": ["<risk 1>", "<risk 2>", "<risk 3>"]
-}}"""
+    Return ONLY a valid JSON object with exactly these fields (no markdown, no explanation):
+    {{
+    "growth_rate": <float, e.g. 0.10 for 10%>,
+    "wacc": <float, e.g. 0.09 for 9%>,
+    "terminal_growth_rate": <float, e.g. 0.025 for 2.5%>,
+    "narrative": "<2-3 sentence summary of the investment case>",
+    "growth_rationale": "<1-2 sentences explaining why you chose this growth rate>",
+    "risk_factors": ["<risk 1>", "<risk 2>", "<risk 3>"]
+    }}"""
 
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     response = client.chat.completions.create(

@@ -23,7 +23,7 @@ from models.schemas import (
 # In a production system you'd pull these from a live database.
 # Source: typical public market multiples (2024 approximations)
 SECTOR_MULTIPLES = {
-    "Technology":            {"ev_ebitda": 22, "pe": 28},
+    "Technology":            {"ev_ebitda": 28, "pe": 35},
     "Healthcare":            {"ev_ebitda": 16, "pe": 22},
     "Consumer Cyclical":     {"ev_ebitda": 12, "pe": 18},
     "Consumer Defensive":    {"ev_ebitda": 14, "pe": 20},

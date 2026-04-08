@@ -57,7 +57,7 @@ def run_collector(ticker: str) -> FinancialData:
 
 def _enrich_news_with_llm(financial_data: FinancialData) -> FinancialData:
     """
-    Uses Claude to distill raw news snippets into 3 concise theme bullets.
+    Uses Groq to distill raw news snippets into 3 concise theme bullets.
     This makes the Analyst's prompt much cleaner and more focused.
 
     LLM ROLE HERE: Summarization / information distillation
@@ -71,14 +71,14 @@ def _enrich_news_with_llm(financial_data: FinancialData) -> FinancialData:
 
     prompt = f"""You are a financial analyst assistant preprocessing news data.
 
-Company: {financial_data.company_name} ({financial_data.ticker})
-Sector: {financial_data.sector}
+    Company: {financial_data.company_name} ({financial_data.ticker})
+    Sector: {financial_data.sector}
 
-Here are recent news snippets:
-{news_block}
+    Here are recent news snippets:
+    {news_block}
 
-Extract the 3 most important themes relevant to valuation (growth drivers, risks, or strategic changes).
-Return ONLY a bullet list of 3 concise themes, each under 30 words. No intro text."""
+    Extract the 3 most important themes relevant to valuation (growth drivers, risks, or strategic changes).
+    Return ONLY a bullet list of 3 concise themes, each under 30 words. No intro text."""
 
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     response = client.chat.completions.create(

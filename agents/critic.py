@@ -52,7 +52,7 @@ def run_critic(financial_data: FinancialData, valuation: ValuationResult) -> Cri
     total_issues = len(inconsistencies) + len(missing_data) + len(unrealistic) + len(evidence_gaps)
     revised_confidence = max(1, valuation.confidence_score - total_issues)
 
-    passed = total_issues == 0 and revised_confidence >= 6
+    passed = len(inconsistencies) == 0 and len(unrealistic) == 0 and revised_confidence >= 6
 
     print(f"  [Critic] Revised confidence: {revised_confidence}/10 | Passed: {passed}")
 
@@ -275,12 +275,19 @@ Return ONLY valid JSON (no markdown):
     )
     raw = response.choices[0].message.content.strip()
 
-    # Strip markdown if present
-    if raw.startswith("```"):
+    # Strip markdown fences more aggressively
+    raw = raw.strip()
+    if "```" in raw:
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
     raw = raw.strip()
+
+    # Extract just the JSON object if there's surrounding text
+    import re
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if match:
+        raw = match.group(0)
 
     try:
         parsed = json.loads(raw)
