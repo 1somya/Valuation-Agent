@@ -149,28 +149,22 @@ def _check_numeric_consistency(financial_data: FinancialData, valuation: Valuati
     return issues
 
 
+# REPLACE the entire _check_missing_data function with this:
 def _check_missing_data(financial_data: FinancialData, valuation: ValuationResult) -> list[str]:
     """
-    Deterministically flags missing data fields that affect result quality.
+    Flags missing data that materially affects result reliability.
+    Note: we only flag here if the Analyst could NOT have caught this already.
     """
     flags = []
 
-    if not financial_data.free_cash_flow:
-        flags.append("Free Cash Flow not available — DCF based on net income approximation")
-    if not financial_data.ebitda_ttm:
-        flags.append("EBITDA not available — EV/EBITDA multiples method could not run")
-    if not financial_data.revenue_growth_yoy:
-        flags.append("Revenue growth data missing — growth assumption less grounded")
+    if not valuation.dcf_result and not valuation.multiples_result:
+        flags.append("CRITICAL: Neither DCF nor Multiples could be calculated — no valuation basis")
     if not financial_data.beta:
-        flags.append("Beta not available — WACC estimate less precise")
+        flags.append("Beta unavailable — WACC estimate is less precise")
+    if not financial_data.recent_news:
+        flags.append("No news data — qualitative context missing from analysis")
     if not financial_data.total_debt:
         flags.append("Debt data missing — equity bridge may be inaccurate")
-    if not financial_data.recent_news:
-        flags.append("No news data — qualitative context is missing from analysis")
-    if not valuation.dcf_result:
-        flags.append("DCF valuation could not be completed — only multiples method used")
-    if not valuation.multiples_result or not valuation.multiples_result.blended_target_price:
-        flags.append("Multiples valuation could not be completed — only DCF method used")
 
     return flags
 
